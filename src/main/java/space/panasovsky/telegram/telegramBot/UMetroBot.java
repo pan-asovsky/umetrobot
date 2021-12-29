@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import space.panasovsky.telegram.telegramBot.command.HelpCommand;
+import space.panasovsky.telegram.telegramBot.command.StartCommand;
 
 
 public class UMetroBot extends TelegramLongPollingCommandBot {
@@ -16,16 +18,29 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
 
     public UMetroBot(String username, String token) {
 
+        super();
         this.TOKEN = token;
         this.USERNAME = username;
+
+        register(new StartCommand("start", "Начнём"));
+        register(new HelpCommand("help", "Помощь"));
     }
 
     @Override
     public void processNonCommandUpdate(Update update) {
 
+        LOG.debug("ChatID: {}, username: {}", update.getMessage().getChatId(),
+                update.getMessage().getChat().getUserName());
+
         final Message message = update.getMessage();
         final Long chatID = message.getChatId();
-        final String username = message.getChat().getUserName();
+        final String username;
+        try {
+            username = message.getChat().getUserName();
+        } catch (NullPointerException e) {
+            LOG.error("Username is empty!", e);
+        }
+
     }
 
     @Override
