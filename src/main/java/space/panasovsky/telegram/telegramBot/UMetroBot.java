@@ -6,8 +6,10 @@ import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+
 import space.panasovsky.telegram.telegramBot.command.HelpCommand;
 import space.panasovsky.telegram.telegramBot.command.StartCommand;
+
 
 
 public class UMetroBot extends TelegramLongPollingCommandBot {
@@ -32,15 +34,28 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
         LOG.debug("ChatID: {}, username: {}", update.getMessage().getChatId(),
                 update.getMessage().getChat().getUserName());
 
-        final Message message = update.getMessage();
-        final Long chatID = message.getChatId();
+        if (update.getMessage() == null ) {
+            LOG.error("Message is null!");
+            return;
+        }
+        if (update.getMessage().getChatId() == null) {
+            LOG.error("ChatID is null!");
+            return;
+        }
+        if (update.getMessage().getChat().getUserName() == null) {
+            LOG.error("Username is null!");
+        }
+
+        Message message;
+        final Long chatID;
         final String username;
         try {
+            message = update.getMessage();
+            chatID = message.getChatId();
             username = message.getChat().getUserName();
         } catch (NullPointerException e) {
             LOG.error("Username is empty!", e);
         }
-
     }
 
     @Override
