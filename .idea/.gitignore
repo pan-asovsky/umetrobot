@@ -6,5 +6,5 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
-uiDesigner.xml
-vcs.xml
+/uiDesigner.xml
+/vcs.xml

@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import space.panasovsky.telegram.telegramBot.command.HelpCommand;
 import space.panasovsky.telegram.telegramBot.command.StartCommand;
-
+import space.panasovsky.telegram.telegramBot.command.TimerCommand;
 
 
 public class UMetroBot extends TelegramLongPollingCommandBot {
@@ -24,8 +24,9 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
         this.TOKEN = token;
         this.USERNAME = username;
 
-        register(new StartCommand("start", "Начнём"));
+        register(new StartCommand("start", "Начнём!"));
         register(new HelpCommand("help", "Помощь"));
+        register(new TimerCommand("timer", "Запуск таймера"));
     }
 
     @Override
