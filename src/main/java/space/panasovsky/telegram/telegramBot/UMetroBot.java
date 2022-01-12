@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import space.panasovsky.telegram.telegramBot.command.HelpCommand;
@@ -45,17 +44,6 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
         }
         if (update.getMessage().getChat().getUserName() == null) {
             LOG.error("Username is null!");
-        }
-
-        Message message;
-        final Long chatID;
-        final String username;
-        try {
-            message = update.getMessage();
-            chatID = message.getChatId();
-            username = message.getChat().getUserName();
-        } catch (NullPointerException e) {
-            LOG.error("Username is empty!", e);
         }
     }
 
