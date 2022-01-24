@@ -1,4 +1,4 @@
-package space.panasovsky.telegram.telegramBot.command;
+package space.panasovsky.telegram.bot.command;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

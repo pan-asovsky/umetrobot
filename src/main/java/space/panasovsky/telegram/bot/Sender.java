@@ -1,20 +1,13 @@
-package space.panasovsky.telegram.telegramBot.command;
+package space.panasovsky.telegram.bot;
 
-import org.telegram.telegrambots.extensions.bots.commandbot.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+public interface Sender {
 
-abstract class CommandHandler extends BotCommand {
-
-    public CommandHandler(String command, String description) {
-        super(command, description);
-    }
-
-    void sendResponse(AbsSender sender, Long chatID, String command, String username, String text) {
+    default void sendResponse(AbsSender sender, Long chatID, String command, String username, String text) {
 
         SendMessage message = new SendMessage();
         message.enableMarkdown(true);
@@ -28,7 +21,7 @@ abstract class CommandHandler extends BotCommand {
         }
     }
 
-    void sendResponse(AbsSender sender, Long chatID, String command, String username, String text, ReplyKeyboardMarkup markup) {
+    default void sendResponse(AbsSender sender, Long chatID, String command, String username, String text, InlineKeyboardMarkup markup) {
 
         SendMessage message = new SendMessage();
         message.enableMarkdown(true);
