@@ -69,7 +69,7 @@ public class TimerCommand extends CommandHandler  {
         startTimer.setCallbackData("start");
 
         final InlineKeyboardButton pauseTimer = new InlineKeyboardButton("\u23F8");
-        pauseTimer.setCallbackData("platform");
+        pauseTimer.setCallbackData("pause");
 
         final InlineKeyboardButton stopTimer = new InlineKeyboardButton("\u23F9");
         stopTimer.setCallbackData("stop");

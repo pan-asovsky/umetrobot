@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -37,37 +38,63 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
         String username;
         Long chatID;
 
-        if (update.getMessage() == null ) {
-            LOG.error("Message is null!");
-            return;
-        }
-        if (update.getMessage().getChatId() == null) {
-            LOG.error("ChatID is null!");
-            return;
+        if (!update.hasCallbackQuery()) {
+
+            if (update.getMessage() == null) {
+                LOG.error("Message is null!");
+                return;
+            }
+            if (update.getMessage().getChatId() == null) {
+                LOG.error("ChatID is null!");
+                return;
+            } else {
+                chatID = update.getMessage().getChatId();
+            }
+            if (update.getMessage().getChat().getUserName() == null) {
+                LOG.error("Username is null!");
+                username = update.getMessage().getChat().getFirstName() + update.getMessage().getChat().getLastName();
+            } else {
+                username = update.getMessage().getChat().getUserName();
+            }
+
         } else {
-            chatID = update.getMessage().getChatId();
-        }
-        if (update.getMessage().getChat().getUserName() == null) {
-            LOG.error("Username is null!");
-            username = update.getMessage().getChat().getFirstName() + update.getMessage().getChat().getLastName();
-        } else {
-            username = update.getMessage().getChat().getUserName();
+
+            if (update.getCallbackQuery().getMessage().getChat().getUserName() == null) {
+                LOG.error("Username is null!");
+                username = update.getMessage().getChat().getFirstName() + update.getMessage().getChat().getLastName();
+            } else {
+                username = update.getCallbackQuery().getMessage().getChat().getUserName();
+            }
+
+            chatID = update.getCallbackQuery().getMessage().getChatId();
+            final Timer t = new Timer();
+
+            final AnswerCallbackQuery answer = new AnswerCallbackQuery();
+
+            switch (update.getCallbackQuery().getData()) {
+
+                case "start" -> {
+                    answer.setCallbackQueryId(update.getCallbackQuery().getId());
+                    answer.setText(t.start());
+                    setResponse(chatID, answer);
+                }
+                case "pause" -> {
+                    answer.setCallbackQueryId(update.getCallbackQuery().getId());
+                    answer.setText(t.pause());
+                    setResponse(chatID, answer);
+                }
+                case "stop" -> {
+                    answer.setCallbackQueryId(update.getCallbackQuery().getId());
+                    answer.setText(t.stop());
+                    setResponse(chatID, answer);
+                }
+            }
         }
 
         try {
             LOG.debug("ChatID: {}, username: {}", chatID, username);
         } catch (NullPointerException e) {
             LOG.error("NPE", e);
-        }
-
-        if (update.hasCallbackQuery()) {
-
-            final Timer t = new Timer();
-            switch (update.getCallbackQuery().getData()) {
-                case "start" -> setRequest(chatID, username, t.start());
-                case "pause" -> setRequest(chatID, username, t.pause());
-                case "stop" -> setRequest(chatID, username, t.stop());
-            }
         }
     }
 
@@ -81,10 +108,10 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
         return TOKEN;
     }
 
-    private void setRequest(Long chatID, String username, String text) {
+    private void setResponse(Long chatID, AnswerCallbackQuery callbackQuery) {
 
         SendMessage request = new SendMessage();
-        request.setText(text);
+        request.setText(callbackQuery.getText());
         request.setChatId(chatID.toString());
         try {
             execute(request);
@@ -92,4 +119,5 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
             tae.printStackTrace();
         }
     }
+
 }
