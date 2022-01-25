@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -82,10 +83,11 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
             final Timer t = new Timer();
 
             switch (update.getCallbackQuery().getData()) {
-                case "start" -> answer.setText(t.start());
-                case "pause" -> answer.setText(t.pause());
-                case "stop" -> answer.setText(t.stop());
+                case "start" -> send(chatID, t.timeHandler("start"));
+                case "pause" -> send(chatID, t.timeHandler("pause"));
+                case "stop" -> send(chatID, t.timeHandler("stop"));
             }
+
             try {
                 execute(answer);
             } catch (TelegramApiException e) {
@@ -109,6 +111,19 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
     @Override
     public String getBotToken() {
         return TOKEN;
+    }
+
+    private void send(long chatID, String var) {
+
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatID));
+        message.setText(var);
+
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
 }
