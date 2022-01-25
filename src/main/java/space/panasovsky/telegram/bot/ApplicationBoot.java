@@ -1,4 +1,4 @@
-package space.panasovsky.telegram.telegramBot;
+package space.panasovsky.telegram.bot;
 
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
