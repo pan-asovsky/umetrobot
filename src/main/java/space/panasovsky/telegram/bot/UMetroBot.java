@@ -4,10 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
-import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
 import space.panasovsky.telegram.bot.command.HelpCommand;
 import space.panasovsky.telegram.bot.command.StartCommand;
@@ -35,8 +36,8 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
     @Override
     public void processNonCommandUpdate(Update update) {
 
-        String username;
-        Long chatID;
+        final String username;
+        final Long chatID;
 
         if (!update.hasCallbackQuery()) {
 
@@ -51,7 +52,6 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
                 chatID = update.getMessage().getChatId();
             }
             if (update.getMessage().getChat().getUserName() == null) {
-                LOG.error("Username is null!");
                 username = update.getMessage().getChat().getFirstName() + update.getMessage().getChat().getLastName();
             } else {
                 username = update.getMessage().getChat().getUserName();
@@ -59,35 +59,37 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
 
         } else {
 
-            if (update.getCallbackQuery().getMessage().getChat().getUserName() == null) {
-                LOG.error("Username is null!");
-                username = update.getMessage().getChat().getFirstName() + update.getMessage().getChat().getLastName();
+            final CallbackQuery callback = update.getCallbackQuery();
+
+            if (callback.getMessage() == null) {
+                LOG.error("Callback message is null!");
+                return;
+            }
+            if (callback.getMessage().getChatId() == null) {
+                LOG.error("Callback chatID is null!");
+                return;
             } else {
-                username = update.getCallbackQuery().getMessage().getChat().getUserName();
+                chatID = callback.getMessage().getChatId();
+            }
+            if (callback.getMessage().getChat().getUserName() == null) {
+                username = callback.getMessage().getChat().getFirstName() + callback.getMessage().getChat().getLastName();
+            } else {
+                username = callback.getMessage().getChat().getUserName();
             }
 
-            chatID = update.getCallbackQuery().getMessage().getChatId();
+            final AnswerCallbackQuery answer = new AnswerCallbackQuery();
+            answer.setCallbackQueryId(callback.getId());
             final Timer t = new Timer();
 
-            final AnswerCallbackQuery answer = new AnswerCallbackQuery();
-
             switch (update.getCallbackQuery().getData()) {
-
-                case "start" -> {
-                    answer.setCallbackQueryId(update.getCallbackQuery().getId());
-                    answer.setText(t.start());
-                    setResponse(chatID, answer);
-                }
-                case "pause" -> {
-                    answer.setCallbackQueryId(update.getCallbackQuery().getId());
-                    answer.setText(t.pause());
-                    setResponse(chatID, answer);
-                }
-                case "stop" -> {
-                    answer.setCallbackQueryId(update.getCallbackQuery().getId());
-                    answer.setText(t.stop());
-                    setResponse(chatID, answer);
-                }
+                case "start" -> answer.setText(t.start());
+                case "pause" -> answer.setText(t.pause());
+                case "stop" -> answer.setText(t.stop());
+            }
+            try {
+                execute(answer);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
             }
         }
 
@@ -96,6 +98,7 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
         } catch (NullPointerException e) {
             LOG.error("NPE", e);
         }
+
     }
 
     @Override
@@ -106,18 +109,6 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
     @Override
     public String getBotToken() {
         return TOKEN;
-    }
-
-    private void setResponse(Long chatID, AnswerCallbackQuery callbackQuery) {
-
-        SendMessage request = new SendMessage();
-        request.setText(callbackQuery.getText());
-        request.setChatId(chatID.toString());
-        try {
-            execute(request);
-        } catch (TelegramApiException tae) {
-            tae.printStackTrace();
-        }
     }
 
 }
