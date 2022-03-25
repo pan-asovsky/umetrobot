@@ -1,15 +1,16 @@
 package space.panasovsky.telegram.bot;
 
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.bots.AbsSender;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+
 
 public interface Sender {
 
-    default void sendResponse(AbsSender sender, Long chatID, String command, String username, String text) {
+    default void sendResponse(final AbsSender sender, final Long chatID, final String text) {
 
-        SendMessage message = new SendMessage();
+        final SendMessage message = new SendMessage();
         message.enableMarkdown(true);
         message.setChatId(chatID.toString());
         message.setText(text);
@@ -21,13 +22,13 @@ public interface Sender {
         }
     }
 
-    default void sendResponse(AbsSender sender, Long chatID, String command, String username, String text, InlineKeyboardMarkup markup) {
+    default void sendResponse(final AbsSender sender, final Long chatID, final String text, final ReplyKeyboard keyboard) {
 
-        SendMessage message = new SendMessage();
+        final SendMessage message = new SendMessage();
         message.enableMarkdown(true);
         message.setChatId(chatID.toString());
-        message.setReplyMarkup(markup);
         message.setText(text);
+        message.setReplyMarkup(keyboard);
 
         try {
             sender.execute(message);

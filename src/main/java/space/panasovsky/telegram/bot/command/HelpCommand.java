@@ -1,31 +1,26 @@
 package space.panasovsky.telegram.bot.command;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.bots.AbsSender;
 
 
 public class HelpCommand extends CommandHandler {
-
-    private static final Logger LOG = LoggerFactory.getLogger(StartCommand.class);
 
     public HelpCommand(String command, String description) {
         super(command, description);
     }
 
     @Override
-    public void execute(AbsSender sender, User user, Chat chat, String[] strings) {
+    public void execute(final AbsSender sender, final User user, final Chat chat, final String[] strings) {
 
-        LOG.info("Вызван метод команды /help");
+        final String helpMessage = """
+                \u27a1Первым шагом необходимо авторизироваться: команда /start
+                \u2705При успешной авторизации вам будет открыт доступ к чату с ботом.
+                \u27a1Отправляйте сообщение типа "кп 000123456"
+                \u27a1В ответ бот пришлёт вам заготовленный ответ, счёт в формате PDF и ссылку на оплату.""";
 
-        String username = (user.getUserName() != null) ? user.getUserName() :
-                String.format("%s%s", user.getLastName(), user.getFirstName());
-
-        sendResponse(sender, chat.getId(), this.getCommandIdentifier(), username,
-                "Это сообщение будет помогать вам ориентироваться в фунционале.");
+        sendResponse(sender, chat.getId(), helpMessage);
     }
 
 }

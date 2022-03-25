@@ -4,6 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
@@ -12,17 +15,17 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import space.panasovsky.telegram.bot.command.HelpCommand;
 import space.panasovsky.telegram.bot.command.StartCommand;
-import space.panasovsky.telegram.bot.command.TimerCommand;
-import space.panasovsky.telegram.bot.util.Timer;
+import space.panasovsky.telegram.bot.data.Users;
 
 
-public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
+public class UMetroBot extends TelegramLongPollingCommandBot {
 
     private static final Logger LOG = LoggerFactory.getLogger(UMetroBot.class);
     private final String TOKEN;
     private final String USERNAME;
 
-    public UMetroBot(String username, String token) {
+
+    public UMetroBot(final String username, final String token) {
 
         super();
         this.TOKEN = token;
@@ -30,76 +33,164 @@ public class UMetroBot extends TelegramLongPollingCommandBot implements Sender {
 
         register(new StartCommand("start", "Начнём!"));
         register(new HelpCommand("help", "Помощь"));
-        register(new TimerCommand("timer", "Таймер"));
     }
 
     @Override
-    public void processNonCommandUpdate(Update update) {
+    public void processNonCommandUpdate(final Update update) {
 
-        final String username;
-        final Long chatID;
+        if (!isCorrectUpdate(update)) return;
+        handleUpdate(update);
+    }
 
-        if (!update.hasCallbackQuery()) {
+    private boolean isCorrectUpdate(final Update update) {
+        return isCallbackQuery(update)
+                ? isCorrectCallbackUpdate(update.getCallbackQuery())
+                : isCorrectNoCallbackUpdate(update);
+    }
 
-            if (update.getMessage() == null) {
-                LOG.error("Message is null!");
-                return;
-            }
-            if (update.getMessage().getChatId() == null) {
-                LOG.error("ChatID is null!");
-                return;
-            } else {
-                chatID = update.getMessage().getChatId();
-            }
-            if (update.getMessage().getChat().getUserName() == null) {
-                username = update.getMessage().getChat().getFirstName() + update.getMessage().getChat().getLastName();
-            } else {
-                username = update.getMessage().getChat().getUserName();
-            }
-
-        } else {
-
-            final CallbackQuery callback = update.getCallbackQuery();
-
-            if (callback.getMessage() == null) {
-                LOG.error("Callback message is null!");
-                return;
-            }
-            if (callback.getMessage().getChatId() == null) {
-                LOG.error("Callback chatID is null!");
-                return;
-            } else {
-                chatID = callback.getMessage().getChatId();
-            }
-            if (callback.getMessage().getChat().getUserName() == null) {
-                username = callback.getMessage().getChat().getFirstName() + callback.getMessage().getChat().getLastName();
-            } else {
-                username = callback.getMessage().getChat().getUserName();
-            }
-
-            final AnswerCallbackQuery answer = new AnswerCallbackQuery();
-            answer.setCallbackQueryId(callback.getId());
-            final Timer t = new Timer();
-
-            switch (update.getCallbackQuery().getData()) {
-                case "start" -> answer.setText(t.start());
-                case "pause" -> answer.setText(t.pause());
-                case "stop" -> answer.setText(t.stop());
-            }
-            try {
-                execute(answer);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
-        }
+    private boolean isCorrectNoCallbackUpdate(final Update update) {
 
         try {
-            LOG.debug("ChatID: {}, username: {}", chatID, username);
+            update.getMessage();
         } catch (NullPointerException e) {
-            LOG.error("NPE", e);
+            LOG.error("Update doesn't contain a Message.");
+            return false;
+        }
+        try {
+            update.getMessage().getChat();
+        } catch (NullPointerException e) {
+            LOG.error("Message doesn't contain a Chat.");
+            return false;
+        }
+        try {
+            update.getMessage().getChatId();
+        } catch (NullPointerException e) {
+            LOG.error("Message doesn't contain a ChatID.");
+            return false;
+        }
+        LOG.debug("Chat: {}, ChatID: {}", update.getMessage().getChat(), update.getMessage().getChatId());
+        return true;
+    }
+
+    private boolean isCorrectCallbackUpdate(final CallbackQuery callback) {
+
+        try {
+            callback.getMessage();
+        } catch (NullPointerException e) {
+            LOG.error("CallbackQuery doesn't contain a Message.");
+            return false;
+        }
+        try {
+            callback.getMessage().getChat();
+        } catch (NullPointerException e) {
+            LOG.error("CallbackQuery doesn't contain a Chat.");
+            return false;
+        }
+        try {
+            callback.getId();
+        } catch (NullPointerException e) {
+            LOG.error("CallbackQuery doesn't contain a ID.");
+            return false;
+        }
+        try {
+            callback.getData();
+        } catch (NullPointerException e) {
+            LOG.error("CallbackQuery doesn't contain a Data.");
+            return false;
+        }
+        LOG.debug("Chat: {}, ChatID: {}", callback.getMessage().getChat(), callback.getMessage().getChatId());
+        return true;
+    }
+
+
+    private boolean isAuthorization(final Update update) {
+        return update.getMessage().getContact() != null;
+    }
+
+    private boolean isCallbackQuery(final Update update) {
+        return update.hasCallbackQuery();
+    }
+
+
+    private void handleUpdate(final Update update) {
+
+        if (isCallbackQuery(update)) handleCallbackQuery(update.getCallbackQuery());
+        else handleNoCallbackQuery(update);
+    }
+
+    private void handleCallbackQuery(final CallbackQuery callback) {
+
+        final String callbackID = callback.getId();
+        final AnswerCallbackQuery answer = new AnswerCallbackQuery();
+        answer.setCallbackQueryId(callbackID);
+
+        try {
+            execute(answer);
+        } catch (TelegramApiException e) {
+            LOG.error("Error at execute Answer.");
         }
 
     }
+
+    private void handleNoCallbackQuery(final Update update) {
+
+        final Users users = new Users();
+        final String chatID = String.valueOf(update.getMessage().getChatId());
+
+        if (isAuthorization(update)) processAuthorization(update.getMessage(), chatID, users);
+        else {
+            if (users.checkAuthorization(chatID)) LOG.info("ChatID: {}", chatID);
+            else send(chatID, "Вам необходимо авторизироваться. \n/start");
+        }
+    }
+
+    private void processAuthorization(final Message message, final String chatID, final Users users) {
+
+        final String phoneNumber = getPhoneNumber(message);
+        if (!users.writeUserToDatabase(chatID, phoneNumber)) {
+            LOG.error("Error at writeUserToDatabase. Phone: {}", phoneNumber);
+        }
+        send(chatID, announceSuccessfulAuthorization(message));
+    }
+
+
+    private void send(final String chatID, final String msg) {
+
+        final SendMessage message = new SendMessage();
+        message.setChatId(chatID);
+        message.setText(msg);
+        message.setReplyMarkup(new ReplyKeyboardRemove(true));
+
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            LOG.error("Error at execute Message");
+        }
+    }
+
+    private String announceSuccessfulAuthorization(final Message message) {
+
+        final String username = getUsername(message);
+        final String phoneNumber = getPhoneNumber(message);
+        return username + ", авторизация прошла успешно! Ваш номер телефона: " + phoneNumber;
+
+    }
+
+    private String getUsername(final Message message) {
+
+        if (message.getContact() != null) {
+            return message.getContact().getFirstName() + " " + message.getContact().getLastName();
+        }
+        if (message.getChat().getUserName() == null) {
+            return message.getChat().getFirstName() + " " + message.getChat().getLastName();
+        }
+        return message.getChat().getUserName();
+    }
+
+    private String getPhoneNumber(final Message message) {
+        return message.getContact().getPhoneNumber();
+    }
+
 
     @Override
     public String getBotUsername() {

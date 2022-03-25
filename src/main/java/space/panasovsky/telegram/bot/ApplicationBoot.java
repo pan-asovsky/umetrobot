@@ -14,8 +14,8 @@ public class ApplicationBoot {
     public static void main(String[] args) {
 
         try {
-            TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(new UMetroBot(env.get("BOT_NAME"), env.get("BOT_TOKEN")));
+            final TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
+            botsApi.registerBot(new UMetroBot(env.get("NAME"), env.get("TOKEN")));
         } catch (TelegramApiException tae) {
             tae.printStackTrace();
         }
