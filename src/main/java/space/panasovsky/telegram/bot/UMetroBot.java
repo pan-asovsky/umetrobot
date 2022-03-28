@@ -13,9 +13,9 @@ import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import space.panasovsky.telegram.bot.command.HelpCommand;
-import space.panasovsky.telegram.bot.command.StartCommand;
 import space.panasovsky.telegram.bot.data.Users;
+import space.panasovsky.telegram.bot.command.StartCommand;
+import space.panasovsky.telegram.bot.command.AuthorizationCommand;
 
 
 public class UMetroBot extends TelegramLongPollingCommandBot {
@@ -31,8 +31,8 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
         this.TOKEN = token;
         this.USERNAME = username;
 
-        register(new StartCommand("start", "Начнём!"));
-        register(new HelpCommand("help", "Помощь"));
+        register(new StartCommand("start", "Помощь"));
+        register(new AuthorizationCommand("auth", "Авторизация"));
     }
 
     @Override
@@ -125,9 +125,9 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
         answer.setCallbackQueryId(callbackID);
 
         try {
-            execute(answer);
+            executeAsync(answer);
         } catch (TelegramApiException e) {
-            LOG.error("Error at execute Answer.");
+            LOG.error("Error at executeAsync Answer.");
         }
 
     }
@@ -140,7 +140,7 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
         if (isAuthorization(update)) processAuthorization(update.getMessage(), chatID, users);
         else {
             if (users.checkAuthorization(chatID)) LOG.info("ChatID: {}", chatID);
-            else send(chatID, "Вам необходимо авторизироваться. \n/start");
+            else send(chatID, "Вам необходимо авторизироваться. \n/auth");
         }
     }
 
@@ -162,9 +162,9 @@ public class UMetroBot extends TelegramLongPollingCommandBot {
         message.setReplyMarkup(new ReplyKeyboardRemove(true));
 
         try {
-            execute(message);
+            executeAsync(message);
         } catch (TelegramApiException e) {
-            LOG.error("Error at execute Message");
+            LOG.error("Error at executeAsync Message");
         }
     }
 
